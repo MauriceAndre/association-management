@@ -1,0 +1,26 @@
+{
+  "name": "association-management",
+  "version": "1.0.0",
+  "description": "Manage your red cross association",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --legacy-watch index.js",
+    "test": "jest --watchAll"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MauriceAndre/association-management.git"
+  },
+  "author": "Maurice Schmid",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MauriceAndre/association-management/issues"
+  },
+  "homepage": "https://github.com/MauriceAndre/association-management#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.1"
+  }
+}
