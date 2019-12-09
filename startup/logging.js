@@ -1,8 +1,8 @@
+// external packages
 const winston = require('winston');
 require('winston-mongodb');
 require('express-async-errors');
-require('express-async-errors');
-const config = require('config');
+// const config = require('config');
 
 module.exports = function () {
     // logging and exception handling
@@ -16,7 +16,7 @@ module.exports = function () {
                     winston.format.simple()
                 )
             }),
-            new winston.transports.File({ filename: 'app.log' }),
+            new winston.transports.File({ filename: 'logs/app.log' }),
             // new winston.transports.MongoDB ({
             //     db: config.get('db.url'),
             //     level: 'error'
@@ -29,7 +29,7 @@ module.exports = function () {
                     winston.format.colorize(),
                     winston.format.simple()
             )}),
-            new winston.transports.File({ filename: 'uncaughtExceptions.log' }),
+            new winston.transports.File({ filename: 'logs/uncaughtExceptions.log' }),
             // new winston.transports.MongoDB ({
             //     db: config.get('db.url')
             // })
