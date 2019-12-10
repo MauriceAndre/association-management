@@ -1,7 +1,7 @@
 // startup functions
 const config = require('../../../startup/config');
 
-describe('Server startup', () => {
+describe('server startup', () => {
 
     it('should throw if required environment variables are not defined', () => {
         const env = process.env.NODE_ENV;

@@ -1,6 +1,6 @@
 const error = require('../../../middleware/error');
 
-describe('Error middleware', () => {
+describe('error middleware', () => {
     it('should response 500', () => {
         require('winston').error = jest.fn();
         const err = new Error('Exception');

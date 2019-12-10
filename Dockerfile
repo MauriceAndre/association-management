@@ -1,7 +1,5 @@
-FROM node:9-slim
+FROM node:slim
 WORKDIR /usr/src/app
-COPY package.json ./
-RUN npm install
+COPY package.json .
 COPY . .
-CMD ["npm", "start"]
 EXPOSE 3000

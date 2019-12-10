@@ -1,6 +1,6 @@
 const {User} = require('../../../models/user');
 
-describe('User model', () => {
+describe('user model', () => {
 
     it('should encrypt password', async () => {
         const password = 'password1';

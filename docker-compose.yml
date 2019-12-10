@@ -6,8 +6,10 @@ services:
         build: .
         ports:
             - '3000:3000'
+        command: bash -c "npm install && npm start"
         volumes:
             - ./:/usr/src/app
+            - /usr/src/app/node_modules
         links:
             - mongo
     mongo:
