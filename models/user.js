@@ -1,25 +1,50 @@
 // external packages
 const mongoose = require('mongoose');
 const Joi = require('@hapi/joi');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+// models
+// const {Qualification} = require('./qualification');
 
 const userSchema = new mongoose.Schema({
     firstName: { type: String, minlength: 3, maxlength: 30, required: true },
     lastName: { type: String, minlength: 3, maxlength: 30, required: true },
     email: { type: String, minlength: 3, maxlength: 255, required: true, unique: true },
-    password: { type: String, minlength: 6, maxlength: 255, required: true }
+    password: { type: String, minlength: 6, maxlength: 255, required: true },
+    isAdmin: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now() },
+    updatedAt: { type: Date },
+    enabled: { type: Boolean, default: true }
+    // qualification: Qualification.schema
 });
 
-userSchema.methods.encryptPassword = async function () {
-    const user = this;
+userSchema.pre('save', function (next) {
+    this.updatedAt = Date.now();
+    next();
+  });
+
+userSchema.methods.encryptPassword = function () {
+    const me = this;
     return new Promise(async (resolve, reject) => {
-        user.password = await bcrypt.hash(user.password, parseInt(process.env.PASSWORD_SALT));
+        const salt = await bcrypt.genSalt(parseInt(process.env.PASSWORD_SALT));
+        me.password = await bcrypt.hash(me.password, salt);
         resolve();
     });
 };
 
 userSchema.methods.comparePassword = function (password) {
-    return bcrypt.compare(password, this.password);;
+    return bcrypt.compare(password, this.password);
+};
+
+userSchema.methods.generateWebToken = function () {
+    return jwt.sign({
+            _id: this._id,
+            isAdmin: this.isAdmin
+        }, process.env.JWT_PRIVATE_KEY);
+};
+
+userSchema.statics.verifyWebToken = function (token) {
+    return jwt.verify(token, process.env.JWT_PRIVATE_KEY);
 };
 
 const User = mongoose.model('User', userSchema);

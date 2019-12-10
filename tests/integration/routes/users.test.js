@@ -2,6 +2,8 @@
 const request = require('supertest');
 // models
 const {User} = require('../../../models/user');
+// tools
+const userUtils = require('../../tools/user-utils');
 
 describe('api/users', () => {
     jest.setTimeout(30000);
@@ -13,8 +15,8 @@ describe('api/users', () => {
     });
 
     afterEach(async () => {
-        await User.remove({});
         await server.close();
+        await userUtils.db.clear();
     });
     
     describe('POST /', () => {
@@ -115,13 +117,22 @@ describe('api/users', () => {
             expect(res.status).toBe(500);
         });
 
-        it('should return user object if request is valid', async () => {
+        it('should return user object and JWT if request is valid', async () => {
             const res = await exec();
 
             expect(res.status).toBe(200);
             expect(Object.keys(res.body)).toEqual(expect.arrayContaining([
                 '_id', 'firstName', 'lastName', 'email'
             ]));
+            expect(res.header).toHaveProperty('x-auth-token');
+        });
+
+        it('should save user in db if request is valid', async () => {
+            const res = await exec();
+
+            const user = await User.findOne({ email });
+
+            expect(user).not.toBeNull();
         });
 
         it('should save encrypted password in db', async () => {            
@@ -131,5 +142,71 @@ describe('api/users', () => {
             const match = await userDb.comparePassword(password);
             expect(match).toBeTruthy();
         });        
+    });
+
+    describe('GET', () => {        
+            
+        let url,
+            token;
+
+        const exec = (args = {}) => {
+            token = args.token !== undefined ? args.token : token;
+            return request(server)
+            .get(url)
+            .set('x-auth-token', token);
+        };
+
+        describe('/', () => {
+    
+            beforeEach(() => {
+                token = new User({ isAdmin: true }).generateWebToken();
+                url = '/api/users';
+            });
+                        
+            // authorization test
+            require('../test snippets/auth')(exec);
+    
+            // admin test
+            require('../test snippets/admin')(exec);
+    
+            it('should return users if request is valid', async () => {
+                await userUtils.db.addManyUsers(2);
+    
+                const res = await exec();
+    
+                expect(res.status).toBe(200);
+                expect(res.body.length).toBe(2);
+            });
+        });
+    
+        describe('/me', () => {
+
+            beforeEach(() => {
+                token = new User({ isAdmin: true }).generateWebToken();
+                url = '/api/users/me';
+            })
+
+            it('should return 400 if user does not exist', async () => {
+                const res = await exec();
+
+                expect(res.status).toBe(400);
+            });
+
+            // authorization test
+            require('../test snippets/auth')(exec);
+
+            it('should return the user object if request is valid', async () => {
+                const user = await userUtils.db.addUser();
+                token = user.generateWebToken();
+                const res = await exec();
+                
+                expect(res.status).toBe(200);
+                expect(res.body._id).toBe(user._id.toHexString());
+                expect(Object.keys(res.body))
+                    .toEqual(expect.arrayContaining(
+                        ['_id', 'firstName', 'lastName', 'email', 'isAdmin', 'createdAt', 'updatedAt']
+                    ));
+            });
+        });
     });
 });
