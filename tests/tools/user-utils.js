@@ -1,3 +1,4 @@
+// models
 const {User} = require('../../models/user');
 
 const Utils = {
@@ -34,6 +35,12 @@ const Utils = {
         clear: function () {
             return User.remove({});
         }
+    },
+    generateAdminToken: function () {
+        return new User({ isAdmin: true }).generateWebToken();
+    },
+    generateDefaultToken: function () {
+        return new User({ isAdmin: false }).generateWebToken();
     }
 }
 
