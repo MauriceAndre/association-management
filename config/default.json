@@ -1,4 +1,6 @@
 {
+    "requiresAuth": true,
+    "requiresAdmin": true,
     "env": [
         "APP_PORT",
         "DB_URL",

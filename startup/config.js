@@ -1,5 +1,8 @@
+// external packages
 const _ = require('lodash');
 const config = require('config');
+const Joi = require('@hapi/joi')
+Joi.objectId = require('joi-objectid')(Joi)
 
 module.exports = function () {
     if (process.env.NODE_ENV !== 'production') require('dotenv').config();

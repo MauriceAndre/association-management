@@ -10,6 +10,8 @@ services:
         volumes:
             - ./:/usr/src/app
             - /usr/src/app/node_modules
+        # environment: 
+        #     - NODE_ENV=production
         links:
             - mongo
     mongo:

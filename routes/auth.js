@@ -2,12 +2,13 @@
 const express = require('express');
 const Joi = require('@hapi/joi');
 // middleware
-const validator = require('../middleware/validator')
+const validator = require('../middleware/validator');
 // models
 const {User} = require('../models/user');
 
 const router = express.Router();
 
+// request JWT token
 router.post('/', validator(validate), async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user) return res.status(401).send('Invalid email or password.');
