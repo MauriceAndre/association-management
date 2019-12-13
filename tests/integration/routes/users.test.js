@@ -1,9 +1,11 @@
 // external packages
 const request = require('supertest');
+const mongoose = require('mongoose');
 // models
 const {User} = require('../../../models/user');
 // tools
 const userUtils = require('../../tools/user-utils');
+const helper = require('../../tools/testing-helper');
 
 describe('api/users', () => {
     jest.setTimeout(30000);
@@ -21,72 +23,84 @@ describe('api/users', () => {
     
     describe('POST /', () => {
         
-        let firstName,
+        let token,
+            firstName,
             lastName,
             email,
-            password;
+            password,
+            qualis;
 
-        beforeEach(() => {
+        beforeEach(async () => {
+            token = userUtils.generateAdminToken();
+
             firstName = 'Maurice';
             lastName = 'Schmid';
             email = 'maurice.schmid@mail.com';
             password = '123Test456';
-        })
+            qualis = [mongoose.Types.ObjectId().toHexString()];
+        });
 
-        const exec = () => {
+        const exec = (args = {}) => {
+            token = args.token !== undefined ? args.token : token;
+            const body = args.body || {
+                firstName,
+                lastName,
+                email,
+                password,
+                qualis
+            };
             return request(server)
                 .post('/api/users')
-                .send({
-                    firstName,
-                    lastName,
-                    email,
-                    password
-                });
-        }
+                .set('x-auth-token', token)
+                .send(body);
+        }        
+                        
+        // authorization test
+        require('../test_snippets/auth')(exec);
+
+        // admin test
+        require('../test_snippets/admin')(exec);
 
         it('should return 400 if request object is invalid', async () => {
-            firstName = lastName = email = password = '';
+            firstName = lastName = email = password = qualis = '';
             const res = await exec();
 
             expect(res.status).toBe(400);
         });
 
-        it('should return 400 if firstName is less than 3 chars', async () => {
-            firstName = new Array(3).join('a');
-            const res = await exec();
-
-            expect(res.status).toBe(400);
-        });
-
-        it('should return 400 if firstName is more than 30 chars', async () => {
-            firstName = new Array(32).join('a');
-            const res = await exec();
-
-            expect(res.status).toBe(400);
-        });
-        
-        it('should return 400 if lastName is less than 3 chars', async () => {
-            lastName = new Array(3).join('a');
-            const res = await exec();
-
-            expect(res.status).toBe(400);
-        });
-
-        it('should return 400 if lastName is more than 30 chars', async () => {
-            lastName = new Array(32).join('a');
-            const res = await exec();
-
-            expect(res.status).toBe(400);
-        });
+        const postSchema = {
+            firstName: {
+                value: firstName,
+                min: 3,
+                max: 30,
+                required: true,
+                type: String
+            },
+            lastName: {
+                value: lastName,
+                min: 3,
+                max: 30,
+                required: true,
+                type: String
+            },
+            password: {
+                value: password,
+                min: 6,
+                max: 255,
+                required: true,
+                type: String
+            },
+            email: {
+                value: email,
+                max: 255,
+                required: true,
+                type: 'email'
+            },
+            qualis: { value: qualis }
+        };
+        helper.post.requestBody(postSchema, 400, exec);
 
         // TODO: should return 400 if email is less than 3 chars
-        
-        it('should return 400 if email is more than 255 chars', async () => {
-            email = new Array(255).join('a') + '@mail.com';
-            const res = await exec();
-
-            expect(res.status).toBe(400);
-        });
 
         it('should return 400 if email is not valid', async () => {
             email = 'myEmail';
@@ -95,15 +109,8 @@ describe('api/users', () => {
             expect(res.status).toBe(400);
         });
 
-        it('should return 400 if password is less than 6 chars', async () => {
-            password = new Array(6).join('a');
-            const res = await exec();
-
-            expect(res.status).toBe(400);
-        });
-
-        it('should return 400 if password is more than 255 chars', async () => {
-            password = new Array(257).join('a');
+        it('should return 400 if qualis is not an ObjectId array', async () => {
+            qualis = ['a']; // invalid ObjectId
             const res = await exec();
 
             expect(res.status).toBe(400);
@@ -122,7 +129,7 @@ describe('api/users', () => {
 
             expect(res.status).toBe(200);
             expect(Object.keys(res.body)).toEqual(expect.arrayContaining([
-                '_id', 'firstName', 'lastName', 'email'
+                '_id', 'firstName', 'lastName', 'email', 'qualis'
             ]));
             expect(res.header).toHaveProperty('x-auth-token');
         });
@@ -144,7 +151,7 @@ describe('api/users', () => {
         });        
     });
 
-    describe('GET', () => {        
+    describe('GET /', () => {        
             
         let url,
             token;
@@ -159,15 +166,15 @@ describe('api/users', () => {
         describe('/', () => {
     
             beforeEach(() => {
-                token = new User({ isAdmin: true }).generateWebToken();
+                token = userUtils.generateAdminToken();
                 url = '/api/users';
             });
-                        
+
             // authorization test
-            require('../test snippets/auth')(exec);
+            require('../test_snippets/auth')(exec);
     
             // admin test
-            require('../test snippets/admin')(exec);
+            require('../test_snippets/admin')(exec);
     
             it('should return users if request is valid', async () => {
                 await userUtils.db.addManyUsers(2);
@@ -182,7 +189,7 @@ describe('api/users', () => {
         describe('/me', () => {
 
             beforeEach(() => {
-                token = new User({ isAdmin: true }).generateWebToken();
+                token = userUtils.generateDefaultToken();
                 url = '/api/users/me';
             })
 
@@ -193,7 +200,7 @@ describe('api/users', () => {
             });
 
             // authorization test
-            require('../test snippets/auth')(exec);
+            require('../test_snippets/auth')(exec);
 
             it('should return the user object if request is valid', async () => {
                 const user = await userUtils.db.addUser();
@@ -204,7 +211,7 @@ describe('api/users', () => {
                 expect(res.body._id).toBe(user._id.toHexString());
                 expect(Object.keys(res.body))
                     .toEqual(expect.arrayContaining(
-                        ['_id', 'firstName', 'lastName', 'email', 'isAdmin', 'createdAt', 'updatedAt']
+                        ['_id', 'firstName', 'lastName', 'email', 'isAdmin', 'createdAt', 'updatedAt', 'qualis']
                     ));
             });
         });

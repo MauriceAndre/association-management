@@ -3,8 +3,6 @@ const mongoose = require('mongoose');
 const Joi = require('@hapi/joi');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-// models
-// const {Qualification} = require('./qualification');
 
 const userSchema = new mongoose.Schema({
     firstName: { type: String, minlength: 3, maxlength: 30, required: true },
@@ -14,8 +12,12 @@ const userSchema = new mongoose.Schema({
     isAdmin: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now() },
     updatedAt: { type: Date },
-    enabled: { type: Boolean, default: true }
-    // qualification: Qualification.schema
+    enabled: { type: Boolean, default: true },
+    qualis: { 
+        type: ['ObjectId'],
+        ref: 'Qualification',
+        required: true
+    }
 });
 
 userSchema.pre('save', function (next) {
@@ -54,7 +56,8 @@ function validateUser (user) {
         firstName: Joi.string().min(3).max(30).required(),
         lastName: Joi.string().min(3).max(30).required(),
         email: Joi.string().min(3).max(255).email().required(),
-        password: Joi.string().min(6).max(255).required()
+        password: Joi.string().min(6).max(255).required(),
+        qualis: Joi.array().items(Joi.objectId())
     });
     return schema.validate(user);
 }
