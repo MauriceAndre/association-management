@@ -38,5 +38,11 @@
     "jest": "^24.9.0",
     "nodemon": "^2.0.1",
     "supertest": "^4.0.2"
+  },
+  "jest": {
+    "coveragePathIgnorePatterns" : [
+      "tests/tools", 
+      "tests/integration/test_snippets" 
+    ]
   }
 }
