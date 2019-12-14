@@ -10,6 +10,9 @@ const Utils = {
             };
             quali = new Qualification(quali);
             return quali.save();
+        },
+        clear: function () {
+            return Qualification.remove({});
         }
     }
 };
