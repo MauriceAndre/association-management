@@ -17,7 +17,7 @@ $ git clone https://github.com/MauriceAndre/association-management.git
 $ docker-compose up
 ```
 
-# Running the tests
+## Running the tests
 ```sh
 $ npm test
 ```
