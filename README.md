@@ -24,7 +24,7 @@ $ npm test
 
 ## Authors
 
-* **Maurice Schmid** - *Initial work*
+* **Maurice Schmid**
 
 <!-- Markdown link & img dfn's -->
 [git-repo]: https://github.com/MauriceAndre/association-management
